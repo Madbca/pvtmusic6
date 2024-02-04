@@ -37,22 +37,18 @@ def git():
         UPSTREAM_REPO = f"https://{GIT_USERNAME}:{config.GIT_TOKEN}@{TEMP_REPO}"
     else:
         UPSTREAM_REPO = config.UPSTREAM_REPO
-
-try:
-    repo = Repo()
-    LOGGER(__name__).info(f"Git Client Found [VPS DEPLOYER]")
-except GitCommandError:
-    LOGGER(__name__).info(f"Invalid Git Command")
-except InvalidGitRepositoryError:
-    repo = Repo.init()
-    if "origin" in repo.remotes:
-        origin = repo.remote("origin")
-    else:
-        origin = repo.create_remote("origin", UPSTREAM_REPO)
-    origin.fetch()
-    
-    # Check if the upstream branch exists in the remote
-    if config.UPSTREAM_BRANCH in origin.refs:
+    try:
+        repo = Repo()
+        LOGGER(__name__).info(f"Git Client Found [VPS DEPLOYER]")
+    except GitCommandError:
+        LOGGER(__name__).info(f"Invalid Git Command")
+    except InvalidGitRepositoryError:
+        repo = Repo.init()
+        if "origin" in repo.remotes:
+            origin = repo.remote("origin")
+        else:
+            origin = repo.create_remote("origin", UPSTREAM_REPO)
+        origin.fetch()
         repo.create_head(
             config.UPSTREAM_BRANCH,
             origin.refs[config.UPSTREAM_BRANCH],
@@ -73,5 +69,3 @@ except InvalidGitRepositoryError:
             repo.git.reset("--hard", "FETCH_HEAD")
         install_req("pip3 install --no-cache-dir -r requirements.txt")
         LOGGER(__name__).info(f"Fetching updates from upstream repository...")
-    else:
-        LOGGER(__name__).info(f"Branch '{config.UPSTREAM_BRANCH}' not found in upstream repository.")
